@@ -6,6 +6,10 @@ Facebookグループへの **自動投稿をブラウザ自動化で実現** す
 
 ## 🎯 できること
 
+## 📸 スクリーンショット
+
+![screenshot](screenshots/screenshot.png)
+
 - 📝 **グループ投稿自動化** — Selenium + Chromeで実際のブラウザ操作
 - ⚛️ **Reactエディタ対応** — Facebookのリッチテキストエディタに `execCommand` で入力
 - 🌐 **多グループ対応** — `groups.json` で複数グループ管理
