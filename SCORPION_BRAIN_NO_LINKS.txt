@@ -1,0 +1,723 @@
+Build Your Own Local AI Command Center - No Monthly Fees, No Cloud Limits
+Author: Scorpion Brain Dev Team
+=======================================================================
+1. THE PROBLEM: Why AI Subscription Fatigue Is Real
+=======================================================================
+If you're a developer using AI tools daily, you've probably noticed something
+painful. The monthly bills keep creeping up.
+
+Let's be honest about what a typical AI-powered developer spends each month:
+
+ChatGPT Plus: $20/month
+- You get GPT-4 access, but with rate limits.
+- If you hit the cap, you're stuck or pay extra.
+
+Claude Pro: $20/month
+- Anthropic's excellent model, but limited messages.
+- Once you exhaust your quota, you wait.
+
+Claude API Usage: $30-100/month (varies wildly)
+- If you use Cursor, Continue.dev, or any AI coding tool...
+- ...you're paying per token behind the scenes.
+- A single heavy coding session can cost $5-10.
+
+OpenRouter Credits: $30-50/month
+- Access to 200+ models, but each query costs something.
+- Testing different models for your workflow adds up fast.
+
+GitHub Copilot: $10/month
+- Actually pretty good value, but single-purpose.
+
+Kiro CLI / Other AI Coding Agents: $20-50/month
+- These tools are powerful but credit-gated.
+- You think twice before asking a "stupid question" because it costs money.
+
+Total: $100-200+/month
+
+That's $1,200 to $2,400 per year. For many developers, especially those in
+countries with weaker currencies or those just learning to code, this is a
+significant burden.
+
+But the financial cost isn't the only problem. There's a psychological cost too:
+- "Is this question worth $0.05?"
+- "Should I debug this myself or pay for AI help?"
+- "I can't experiment freely because every token costs something."
+- "What if I run out of credits mid-session?"
+
+This anxiety kills the creative flow. You should be focused on building, not
+watching a meter tick.
+
+=======================================================================
+2. THE SOLUTION: SCORPION BRAIN Philosophy
+=======================================================================
+SCORPION BRAIN is built on a simple philosophy:
+
+No cloud. No credits. No limits. Pure local power.
+
+The idea isn't to abandon cloud AI entirely. Cloud AI is incredibly powerful
+— frontier models like Claude Opus, GPT-5, and Gemini Ultra are genuinely
+amazing. The problem is using them for everything, including trivial tasks
+that a small local model can handle perfectly well.
+
+The insight is this:
+
+80% of daily AI usage: quick questions, simple code fixes, casual chat.
+15%: moderately complex — debugging, code generation, refactoring.
+5%: truly difficult — architecture, complex reasoning, novel problems.
+
+With SCORPION BRAIN:
+80% → LOCAL MODELS (free, instant, unlimited)
+15% → LOCAL DEEP MODELS (free, a bit slower, unlimited)
+5% → CLOUD API (paid, powerful, used sparingly)
+
+95% of your AI usage for free. Only pay for the 5% that genuinely needs
+frontier model power.
+
+=======================================================================
+3. HARDWARE REQUIREMENTS
+=======================================================================
+MINIMUM:
+CPU: Any modern x86_64 (Intel 8th gen+, AMD Ryzen 3000+)
+RAM: 16GB (ABSOLUTE minimum)
+Storage: 30GB free space
+GPU: Not required (CPU-only works, just slower)
+
+RECOMMENDED (what I run daily):
+CPU: Intel 12th gen+ or AMD Ryzen 5000+
+RAM: 32GB
+Storage: 100GB+ NVMe SSD (models are large!)
+GPU: NVIDIA with 8GB+ VRAM (RTX 2080 Ti, RTX 3060 12GB, RTX 4070, RTX 4090)
+
+IDEAL:
+RAM: 64GB+
+Storage: 200GB+ NVMe SSD
+GPU: NVIDIA 24GB+ VRAM (RTX 4090, A5000, dual GPUs)
+
+GPU vs CPU TRADEOFFS:
+NVIDIA GPU (CUDA): 10-50x faster than CPU. 7B models fine with 8GB VRAM.
+CPU-only: 2-10 tok/sec vs 30-80 tok/sec. Same quality, just slower.
+Apple Silicon (M1/M2/M3/M4): Excellent — unified memory helps a lot.
+AMD GPU: ROCm support improving but still rocky on some setups.
+
+=======================================================================
+4. STEP 1: INSTALL OLLAMA
+=======================================================================
+Linux:
+curl -fsSL [install script URL from the Ollama website] | sh
+
+macOS / Windows: Download from the Ollama website
+
+Verify:
+ollama --version
+ollama list (empty list is fine!)
+
+API endpoint: localhost:11434/v1
+
+KEY COMMANDS:
+ollama pull <model>    Download a model
+ollama run <model>     Run a model interactively
+ollama list            List all downloaded models
+ollama rm <model>      Remove a model
+ollama show <model>    Show model details
+ollama stop <model>    Stop a running model
+
+=======================================================================
+5. STEP 2: CHOOSE YOUR MODELS
+=======================================================================
+FOR CHAT (fast, lightweight):
+Model: gemma4:e4b
+Size: ~4GB | VRAM: ~4GB | Speed: ~75 tok/sec
+Best for: Quick questions, casual chat, simple explanations
+Pull: ollama pull gemma4:e4b
+Alternatives: llama3.2:3b (even faster), phi3:mini (balanced),
+qwen2.5:3b (fast+capable)
+
+FOR CODE (generation and fixes):
+Model: qwen3-coder:latest
+Size: ~5-6GB | VRAM: ~6-8GB | Speed: ~35 tok/sec
+Best for: Code generation, bug fixing, refactoring
+Pull: ollama pull qwen3-coder
+Alternatives: OmniCoder-9B (multi-language), deepseek-coder:6.7b (Python/JS),
+codellama:7b (legacy), starcoder2:7b (completion)
+
+FOR DEEP REASONING (architecture, design, review):
+Model: qwen3.6:35b-a3b
+Size: ~20GB | VRAM: ~20GB (can use CPU+GPU hybrid) | Speed: ~8 tok/sec
+Best for: Architecture review, design decisions, complex analysis
+Pull: ollama pull qwen3.6:35b-a3b
+Alternatives: llama3:70b (40GB, deepest), mixtral:8x7b (26GB, MoE),
+qwen2.5:32b (20GB, excellent)
+
+TOTAL STORAGE: ~30GB for all three models.
+TOTAL VRAM (with --keep-alive): ~12-18GB.
+
+Note: For 35b model with 11GB VRAM + 32GB RAM, Ollama auto-offloads layers
+to CPU. Slower (5-8 tok/sec) but still works.
+
+=======================================================================
+6. STEP 3: BUILD THE BRAIN ROUTER (The Secret Sauce)
+=======================================================================
+The Brain Router is an OpenAI-compatible API proxy that automatically routes
+your requests to the BEST model based on prompt content.
+
+Without it:
+1. Remember which model does what
+2. Manually switch in your UI
+3. Wait for models to load/unload from VRAM
+
+With it:
+1. Talk to ONE endpoint (localhost:11435)
+2. It analyzes your prompt
+3. Routes to the right model automatically
+
+Complete implementation — save as brain_router.py:
+
+```python
+#!/usr/bin/env python3
+"""
+SCORPION BRAIN Router - Auto model selection based on prompt content.
+OpenAI-compatible API proxy that routes to the best local model.
+"""
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from openai import AsyncOpenAI
+import re
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("brain-router")
+
+app = FastAPI(title="SCORPION BRAIN Router", version="1.0.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Connect to local Ollama
+client = AsyncOpenAI(
+    base_url="http://localhost:11434/v1",
+    api_key="ollama"
+)
+
+# ===== MODEL REGISTRY =====
+MODELS = {
+    "chat": {
+        "model": "gemma4:e4b",
+        "description": "Fast chat for quick responses",
+        "speed": "fast",
+        "context_length": 262144,
+        "temperature": 0.7
+    },
+    "code": {
+        "model": "qwen3-coder:latest",
+        "description": "Code generation and debugging",
+        "speed": "moderate",
+        "context_length": 1048576,
+        "temperature": 0.2
+    },
+    "deep": {
+        "model": "qwen3.6:35b-a3b",
+        "description": "Deep reasoning for complex analysis",
+        "speed": "slow",
+        "context_length": 262144,
+        "temperature": 0.6
+    }
+}
+
+# ===== PROMPT CLASSIFIER =====
+def classify_prompt(text: str) -> str:
+    """
+    Analyze prompt text and return: 'chat', 'code', or 'deep'
+    """
+    text_lower = text.lower()
+
+    # Deep reasoning keywords (checked FIRST - highest priority)
+    deep_patterns = [
+        r'\b(review|analy|architect|design|compare|trade.?off|evaluat)',
+        r'\b(optimize|refactor|strategy|plan|propos|alternativ)',
+        r'\b(security|performance|scalab|reliab|maintain)',
+        r'\b(complex|difficult|challenging|thorough|comprehensiv)',
+        r'\b(explain\s+(in\s+)?detail|elaborat|break\s+down)',
+        r'\b(should\s+(i|we)\s+(use|choose|implement|adopt))',
+        r'\b(what\s+(is\s+the\s+)?best\s+(way|approach|practice))',
+    ]
+
+    # Code-related keywords
+    code_patterns = [
+        r'\b(fix|bug|error|debug|crash|exception|fail)',
+        r'\b(code|function|method|class|import|module|library)',
+        r'\b(implement|write|create|generate|build|develop)',
+        r'\b(compile|syntax|lint|test|unit|integration|e2e)',
+        r'\b(api|endpoint|route|request|response|http|rest)',
+        r'\b(git|commit|push|pull|branch|merge|pr|issue)',
+        r'\b(docker|container|deploy|config|env|setup)',
+        r'\b(python|javascript|typescript|rust|go|java|cpp|ruby)',
+        r'\b(sql|database|query|table|index|schema|migration)',
+        r'\b(css|html|react|vue|angular|svelte|component)',
+        r'\b(regex|pars|serial|deserial|format|convert|transform)',
+        r'\b(terminal|command|script|bash|shell|zsh|fish)',
+        r'\b(algorithm|data\s+structure|sort|search|tree|graph)',
+    ]
+
+    # Check deep first
+    for pattern in deep_patterns:
+        if re.search(pattern, text_lower):
+            logger.info(f"Classified as 'deep'")
+            return "deep"
+
+    # Then code
+    for pattern in code_patterns:
+        if re.search(pattern, text_lower):
+            logger.info(f"Classified as 'code'")
+            return "code"
+
+    # Default to chat
+    logger.info("Classified as 'chat'")
+    return "chat"
+
+def analyze_conversation(messages: list) -> str:
+    """
+    Analyze conversation history for context-aware routing.
+    """
+    if not messages:
+        return "chat"
+
+    # Get last user message
+    last_user_msg = ""
+    for msg in reversed(messages):
+        if msg.get("role") == "user":
+            last_user_msg = msg.get("content", "")
+            break
+
+    primary_mode = classify_prompt(last_user_msg)
+
+    # Check if conversation is coding-heavy
+    code_mentions = 0
+    for msg in messages[-10:]:
+        content = msg.get("content", "")
+        if re.search(r'\b(code|function|bug|error|implement|script|api)\b',
+                      content, re.I):
+            code_mentions += 1
+
+    if code_mentions >= 5 and primary_mode == "chat":
+        logger.info(f"{code_mentions}/10 code-related, upgrading to 'code'")
+        return "code"
+
+    return primary_mode
+
+# ===== API ENDPOINTS =====
+@app.get("/")
+async def root():
+    return {
+        "service": "SCORPION BRAIN Router",
+        "status": "running",
+        "models": list(MODELS.keys()),
+        "default_model": "auto"
+    }
+
+@app.get("/v1/models")
+async def list_models():
+    model_list = []
+    for mode, config in MODELS.items():
+        model_list.append({
+            "id": config["model"],
+            "object": "model",
+            "owned_by": "scorpion-brain",
+            "mode": mode
+        })
+    model_list.append({
+        "id": "auto",
+        "object": "model",
+        "owned_by": "scorpion-brain",
+        "description": "Auto-selects best model for your prompt"
+    })
+    return {"object": "list", "data": model_list}
+
+@app.post("/v1/chat/completions")
+async def chat_completions(body: dict):
+    try:
+        messages = body.get("messages", [])
+        requested_model = body.get("model", "auto")
+
+        if not messages:
+            raise HTTPException(status_code=400, detail="No messages provided")
+
+        if requested_model == "auto":
+            mode = analyze_conversation(messages)
+            model_config = MODELS[mode]
+            actual_model = model_config["model"]
+            logger.info(f"Auto-routing to {actual_model} (mode: {mode})")
+        else:
+            actual_model = requested_model
+            model_config = {"temperature": 0.7, "context_length": 1048576}
+
+        temperature = body.get("temperature",
+                                model_config.get("temperature", 0.7))
+        max_tokens = body.get("max_tokens",
+                              model_config.get("context_length", 1048576))
+
+        logger.info(f"Sending to {actual_model} ({len(messages)} messages)")
+
+        response = await client.chat.completions.create(
+            model=actual_model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=min(max_tokens,
+                           model_config.get("context_length", 1048576)),
+            stream=body.get("stream", False)
+        )
+        return response
+
+    except Exception as e:
+        logger.error(f"Error: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    import uvicorn
+    print("=" * 50)
+    print("SCORPION BRAIN Router starting...")
+    print("Models:")
+    for mode, config in MODELS.items():
+        print(f" - {mode}: {config['model']} ({config['description']})")
+    print("=" * 50)
+    uvicorn.run(app, host="0.0.0.0", port=11435)
+```
+
+Setup & Run:
+pip install fastapi uvicorn openai
+python3 brain_router.py &
+
+Test it:
+curl http://localhost:11435/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "auto",
+    "messages": [{"role": "user", "content": "Say hello!"}]
+  }'
+
+=======================================================================
+7. STEP 4: SPEED OPTIMIZATION
+=======================================================================
+The biggest complaint about local AI is speed. Here's how to make it INSTANT.
+
+PROBLEM: First request takes 5-30 seconds (model loads from disk -> VRAM).
+
+SOLUTION 1: Keep-Alive Mode (MOST IMPORTANT!)
+# Keep chat model in VRAM permanently
+ollama run gemma4:e4b --keep-alive=-1 &
+
+# Keep code model alive for 5 minutes after last use
+ollama run qwen3-coder:latest --keep-alive=5m &
+
+Result: Chat under 1 second. Code under 5 seconds.
+
+VRAM cost:
+- gemma4 alone: ~4GB
+- All 3 loaded: ~18GB
+- Limited VRAM? Just keep gemma4 loaded.
+
+SOLUTION 2: Pre-Warm Coder Model
+curl http://localhost:11434/api/generate -d '{
+  "model": "qwen3-coder:latest",
+  "prompt": ".",
+  "keep_alive": "5m"
+}'
+
+Put this in a script that runs when you start your IDE.
+
+SOLUTION 3: Startup Preload Script
+#!/bin/bash
+# ~/.config/autostart/scorpion-brain.sh
+ollama serve &
+sleep 3
+ollama run gemma4:e4b --keep-alive=-1 &
+echo "SCORPION BRAIN preloaded!"
+
+For Hyprland, add to ~/.config/hypr/hyprland.conf:
+exec-once = ~/.config/autostart/scorpion-brain.sh
+
+SOLUTION 4: Ultra-Fast Gate Model
+For truly trivial queries (greetings, yes/no), use a tiny model.
+Add to Brain Router:
+"ultra_fast": {
+    "model": "llama3.2:1b",
+    "speed": "instant",
+    "temperature": 0.8
+}
+
+BENCHMARKS (RTX 2080 Ti 11GB, 32GB RAM):
+Model              | First Load | With Keep-Alive | Tokens/sec
+gemma4:e4b        | 6s         | 0.5s            | ~75
+qwen3-coder       | 12s        | 1.2s            | ~35
+qwen3.6:35b       | 25s        | 3.5s            | ~8
+
+=======================================================================
+8. STEP 5: INTEGRATE WITH HERMES AGENT
+=======================================================================
+Hermes Agent by NousResearch adds:
+- Tool calling (terminal, files, web search)
+- MCP (Model Context Protocol) support
+- Configurable providers and models
+- Cron job scheduling
+
+Install:
+pip install hermes-agent
+
+Configure ~/.hermes/config.yaml:
+
+# Global settings
+context_length: 1048576
+temperature: 0.7
+
+providers:
+  brain-router:
+    base_url: http://localhost:11435/v1
+    api_key: not-needed
+    models:
+      - "auto"
+      - "gemma4:e4b"
+      - "qwen3-coder:latest"
+      - "qwen3.6:35b-a3b"
+
+  ollama-local:
+    base_url: http://localhost:11434/v1
+    api_key: ollama
+    models:
+      - "gemma4:e4b"
+      - "qwen3-coder:latest"
+
+  cloud-provider:
+    base_url: [your-cloud-api-endpoint]
+    api_key: ${CLOUD_API_KEY}
+    models:
+      - "claude-sonnet-4"
+      - "gpt-5"
+
+default_provider: brain-router
+default_model: auto
+
+Usage:
+hermes -m auto --provider brain-router
+hermes -m qwen3-coder:latest --provider brain-router
+hermes -m claude-sonnet-4 --provider cloud-provider
+
+=======================================================================
+9. STEP 6: DAILY WORKFLOW
+=======================================================================
+MORNING (15 seconds to launch everything):
+ollama serve &
+ollama run gemma4:e4b --keep-alive=-1 &
+python3 ~/scorpion-brain/brain_router.py &
+hermes chat --provider brain-router -m auto
+
+TYPICAL INTERACTIONS:
+"Hey, what's the syntax for a Python list comprehension?"
+-> Router detects chat -> gemma4 -> < 1 second -> Cost: $0
+
+"Fix this function: [broken code]"
+-> Router detects fix+code -> qwen3-coder -> 3-5 seconds -> Cost: $0
+
+"Review this API design and suggest improvements:"
+-> Router detects review+design -> qwen3.6:35b -> 10-20 seconds -> Cost: $0
+
+"Write a complex distributed consensus system..."
+-> If local isn't enough:
+-> hermes -m claude-sonnet-4 --provider cloud-provider
+-> Cost: ~$0.50
+
+=======================================================================
+10. COST BREAKDOWN: THE NUMBERS
+=======================================================================
+BEFORE SCORPION BRAIN (monthly):
+ChatGPT Plus              $20
+Claude Pro                $20
+Claude API (Cursor)       $40
+OpenRouter Credits        $30
+GitHub Copilot            $10
+Kiro CLI                  $20
+-----------------------------
+TOTAL                     $140/month -> $1,680/year
+
+AFTER SCORPION BRAIN (monthly):
+Electricity (extra)       $10-15
+Kiro CLI (rare use)       $5-10
+Cloud API (rare)          $5-10
+ChatGPT Plus              $0 (cancelled)
+Claude Pro                $0 (cancelled)
+GitHub Copilot            $10
+-----------------------------
+TOTAL                     $25-40/month -> $300-480/year
+
+SAVINGS: $100-115/month = $1,200-1,400/year
+
+THREE-YEAR PROJECTION:
+Without SCORPION BRAIN: $5,040
+With SCORPION BRAIN:    $1,080-1,440
+GPU cost (RTX 2080 Ti, used): ~$300
+
+NET SAVINGS over 3 years: $3,300-3,660
+
+Plus: unlimited queries, no mental overhead of watching a credit meter.
+
+=======================================================================
+11. TROUBLESHOOTING
+=======================================================================
+PORT ALREADY IN USE:
+sudo lsof -i :11434
+kill -9 <PID>
+
+CUDA OUT OF MEMORY:
+ollama run qwen3-coder --context-size 8192
+# Or use fewer GPU layers:
+ollama run qwen3-coder --num-gpu 20
+# Or try a smaller model:
+ollama pull qwen2.5-coder:1.5b
+
+RESPONSES ARE SLOW:
+1. Is --keep-alive set? (nvidia-smi to check)
+2. Check CPU usage: htop
+3. Reduce context to 4096 for speed
+
+BRAIN ROUTER RETURNS 500:
+curl http://localhost:11434   # Should say "Ollama is running"
+
+HERMES CAN'T CONNECT:
+curl http://localhost:11435/v1/models
+
+GIBBERISH OUTPUT:
+Check temperature. Code: 0.1-0.3, Chat: 0.7-0.9
+
+SLOW DOWNLOADS:
+ollama pull qwen3.6:35b-a3b   # Run overnight!
+
+=======================================================================
+12. ADVANCED CONFIGURATIONS
+=======================================================================
+MULTI-USER (share across home network):
+uvicorn.run(app, host="0.0.0.0", port=11435)
+# Other PC: set OPENAI_BASE_URL to your server IP
+
+CLOUD FALLBACK (auto when local isn't enough):
+if mode == "deep" and detect_complexity(last_msg) > 0.8:
+    response = await cloud_client.chat.completions.create(...)
+
+PARALLEL EXECUTION (code + architecture review simultaneously):
+code_task = client.chat.completions.create(model="qwen3-coder:latest", ...)
+arch_task = client.chat.completions.create(model="qwen3.6:35b-a3b", ...)
+results = await asyncio.gather(code_task, arch_task)
+
+QUANTIZATION TRADEOFFS:
+Q2_K:   2x speed, 70% quality
+Q4_K_M: 1x speed, 95% quality (default)
+Q8_0:   0.7x speed, 99% quality
+FP16:   0.4x speed, 100% quality
+
+=======================================================================
+13. MODEL COMPARISON (June 2026)
+=======================================================================
+CHAT MODELS:
+Model           | Size | VRAM  | Tok/sec | Quality | Best For
+gemma4:e4b     | 4GB  | 4GB   | 75      | 9/10    | All-around
+llama3.2:3b    | 2GB  | 2.5GB | 90      | 7/10    | Ultra-fast
+phi3:mini      | 3GB  | 3GB   | 80      | 8/10    | Balanced
+qwen2.5:3b     | 2GB  | 2.5GB | 85      | 7/10    | EN/ZH
+mistral:7b     | 4GB  | 5GB   | 60      | 8/10    | General
+
+CODE MODELS:
+Model             | Size | VRAM | Quality | Best For
+qwen3-coder      | 5GB  | 6GB  | 9/10    | All coding
+OmniCoder-9B     | 6GB  | 7GB  | 9/10    | Multi-lang
+deepseek-coder:6.7b| 4GB| 5GB  | 8/10    | Python/JS
+codellama:7b     | 4GB  | 5GB  | 7/10    | Legacy
+starcoder2:7b    | 4GB  | 5GB  | 7/10    | Completion
+
+DEEP REASONING MODELS:
+Model             | Size  | VRAM  | Quality | Best For
+qwen3.6:35b-a3b  | 20GB  | 20GB  | 9/10    | Architecture
+llama3:70b       | 40GB  | 40GB  | 9/10    | Deepest
+mixtral:8x7b     | 26GB  | 26GB  | 8/10    | MoE efficient
+qwen2.5:32b      | 20GB  | 20GB  | 9/10    | Complex tasks
+phi3:14b         | 8GB   | 9GB   | 8/10    | Mid-range
+
+=======================================================================
+14. FAQ
+=======================================================================
+Q: Better than ChatGPT Plus?
+A: For daily dev work, yes. 80% handled locally. Cutting-edge creative tasks
+still benefit from frontier cloud models.
+
+Q: Can I run this on a laptop?
+A: Gaming laptop with RTX 4060 = great. MacBook Air M3 = small models OK.
+Old Thinkpad = slow but functional via CPU inference.
+
+Q: Internet needed?
+A: Only for initial model downloads (4-40GB each). Everything runs offline.
+
+Q: Works with VSCode/Cursor?
+A: Yes! Point AI extension to localhost:11435/v1
+
+Q: Electricity cost?
+A: 300W GPU x 8 hours/day is about $10-15/month. Far less than subscriptions.
+
+Q: Multiple models at once?
+A: Yes, if VRAM allows. 12GB = gemma4 + qwen3-coder simultaneously.
+
+Q: Data privacy?
+A: Everything local. Nothing leaves your machine (unless you use cloud API).
+
+Q: Can I fine-tune?
+A: Ollama supports Modelfiles for custom models. Full fine-tuning needs
+separate tools like Axolotl or Unsloth.
+
+Q: Router misclassifies? Override it:
+hermes -m qwen3-coder:latest --provider brain-router
+
+=======================================================================
+15. CONCLUSION: Start Building Today
+=======================================================================
+SCORPION BRAIN proves you don't need $100+/month for real AI assistance.
+
+The framework:
+Simple questions -> tiny fast models -> FREE
+Code tasks -> specialized coder models -> FREE
+Deep analysis -> big reasoning models -> FREE
+Truly hard problems -> cloud API -> paid but rare
+
+Setup: ~1 hour
+Cost: $0 (with existing PC + NVIDIA GPU)
+Monthly savings: $100+
+Mental freedom: priceless
+
+Your local AI command center is one install script away.
+Dive in. Build something. Never watch a credit meter again.
+
+=======================================================================
+RESOURCES
+=======================================================================
+Original Japanese article by Scorpion Brain Dev Team — search "Scorpion Brain note" to find it
+Reddit: u/Beneficial_Club_5428
+SCORPION BRAIN code repository: (coming soon!)
+
+Software used:
+- Ollama (local AI runtime)
+- Hermes Agent by NousResearch (AI agent framework)
+- FastAPI (Python web framework)
+
+My Specs:
+CPU: Intel Core i5-12600KF (12th Gen)
+GPU: NVIDIA GeForce RTX 2080 Ti (11GB VRAM)
+RAM: 32GB DDR4
+Storage: 500GB NVMe SSD (+ multiple SATA drives totaling several TB)
+OS: Gentoo Linux (Hyprland)
+
+Support the project:
+- Like and share this post
+- Check out the Japanese note article for more details (search "Scorpion Brain")
+- DM me if you need help setting up your own SCORPION BRAIN!
+
+#LocalAI #Ollama #HermesAgent #OpenSource #AIDevelopment
+#CodingForBeginners #SelfHosted #AIOptimization #MachineLearning
+#LLM #NVIDIA #Linux #Homelab #DevOps #AITools #CostSaving
