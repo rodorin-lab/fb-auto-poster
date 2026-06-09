@@ -1,115 +1,45 @@
-# Facebook Group Auto Poster
+# 📢 Facebookグループ自動投稿ツール
 
-A Python & Playwright-based automation tool for posting content to multiple Facebook groups automatically.
+![Status](https://img.shields.io/badge/status-%E5%AE%9F%E6%88%A6%E6%8A%95%E5%85%A5%E6%B8%88-orange) ![Stack](https://img.shields.io/badge/stack-Python%20%2B%20Selenium-brightgreen)
 
-> **Note:** If you have any questions, feel free to contact me directly.
+Facebookグループへの **自動投稿をブラウザ自動化で実現** するツール群だよ！
 
----
+## 🎯 できること
 
-## 🎥 Proof of Concept (PoC)
+- 📝 **グループ投稿自動化** — Selenium + Chromeで実際のブラウザ操作
+- ⚛️ **Reactエディタ対応** — Facebookのリッチテキストエディタに `execCommand` で入力
+- 🌐 **多グループ対応** — `groups.json` で複数グループ管理
+- ⌨️ **キーボードショートカット** — Ctrl+Enter投稿対応
+- 🎨 **絵文字対応** — ChromeDriver BMP制限に注意
 
-<video src="https://github.com/user-attachments/assets/dcb87b77-d6b6-46aa-925d-bdabfd5c1005" width="600" controls autoplay loop></video>
+## 📂 主要ファイル
 
-## 🚀 Features
+| ファイル | 内容 |
+|----------|------|
+| `simple_final.py` | 最終版・安定動作 |
+| `react_final.py` | React editor直接操作版 |
+| `jl_first_post.py` | 日本語学習グループ初回投稿 |
+| `invader_game_post.py` | invader-game宣伝投稿 |
+| `mbasic.py` | Facebook Basicモード経由 |
+| `keyboard_approach.py` | キーボード操作アプローチ |
+| `js_inject.py` | JavaScriptインジェクション方式 |
 
-- Automates Facebook login and group posting.
-- Supports multiple groups via a `groups.json` configuration file.
-- Allows custom post content.
-- Stores and reuses Facebook session cookies to avoid logging in every time.
+## 🚀 使い方
 
----
-
-## 📦 Installation
-
-1. Install [Python 3.9+](https://www.python.org/downloads/).
-2. Install dependencies:
-   ```bash
-   pip install playwright
-   playwright install chromium
-   ```
-
-## 🛠 First-Time Setup
-
-If this is your **first time running the script**, you need to log in and generate your cookie:
-
-```python
-from playwright.sync_api import sync_playwright
-
-with sync_playwright() as p:
-    self.browser = p.chromium.launch(
-        headless=False,
-        channel='chrome',
-        args=['--start-maximized']
-    )
-    self.context = self.browser.new_context(no_viewport=True)
-    self.page = self.context.new_page()
-
-    # First-time login
-    self.generate_cookie()
-    # self.load_cookie()
-    # self.post_to_groups()
+```bash
+pip install selenium
+python3 simple_final.py
 ```
 
-This will open a Chrome window where you can log in to your Facebook account. Once you log in successfully, cookies will be saved for future runs.
+> ⚠️ Chrome + ChromeDriver が必要です。Gentoo/Hyprland/Wayland環境では調整が必要。
 
-## 🔄 Regular Usage (After Cookie Saved)
+## 🎯 実績
 
-For subsequent runs, load the saved cookie and start posting automatically:
+- ✅ 日本語学習グループ（166人）での投稿成功
+- ✅ Evolving AI Labページ運営
+- ✅ coding4beginnersグループ投稿
 
-```python
-from playwright.sync_api import sync_playwright
+## 📝 作者
 
-with sync_playwright() as p:
-    self.browser = p.chromium.launch(
-        headless=False,
-        channel='chrome',
-        args=['--start-maximized']
-    )
-    self.context = self.browser.new_context(no_viewport=True)
-    self.page = self.context.new_page()
-
-    # Load saved session
-    self.load_cookie()
-    self.post_to_groups()
-```
-
-## ✏️ Updating Post Content
-
-Edit the `POST_CONTENT` variable in your script to customize the post:
-
-```python
-POST_CONTENT = f"""
-Hello everyone,
-
-Automated post: {now.strftime("%H:%M:%S")}
-
-https://youtu.be/BdjZFPTONYc
-"""
-```
-
-## 🎯 Configuring Target Groups
-
-Edit `groups.json` to define the groups you want to post in:
-
-```json
-[
-  {
-    "name": "Алгоритм",
-    "username": "algorithmicsmn",
-    "status": "straight"
-  },
-  {
-    "name": "Next.js developers of Mongolia",
-    "username": "nextjs.developers.of.mongolia",
-    "status": "straight"
-  }
-]
-```
-
-- **status**:
-  - "straight" → Post will be uploaded directly.
-  - "pending" → Post will be sent for admin approval.
-
-## ⚠️ Disclaimer
-
-This project is for educational purposes only. Use at your own risk. Automating Facebook actions may violate their terms of service, and your account could be restricted or banned.
+- **ロドリン** & **シンクロ（グラム）** 💎🛸
+- rodorin-lab © 2026
